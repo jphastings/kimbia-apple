@@ -23,7 +23,10 @@ actor SyncRunner {
             did: session.did,
             source: HealthKitWorkoutSource.shared,
             writer: AppEnvironment.makePDSClient(session: session),
-            mapper: KimbiaActivityMapper(),
+            mapper: KimbiaActivityMapper(
+                privacy: { AppEnvironment.preferences.privacy },
+                routes: HealthKitWorkoutSource.shared
+            ),
             ledgerStore: AppEnvironment.ledgerStore
         )
         engine = (session.did, fresh)

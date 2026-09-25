@@ -18,7 +18,7 @@ Everything that can be tested without a phone. `swift test` runs it on macOS.
 | `ATProto/` | Identity resolution, OAuth sign-in (PAR, PKCE and DPoP via [OAuthenticator](https://github.com/ATProtoKit/OAuthenticator) and [Jot](https://github.com/ATProtoKit/Jot)), and `PDSClient` for XRPC calls, which refreshes tokens transparently and writes them back to the Keychain. Shared with [semble-share-sheet](https://github.com/jphastings/semble-share-sheet). |
 | `Session/` | The signed-in `Session` and its Keychain store. The item is readable after first unlock, because background syncs can run while the phone is locked. |
 | `Sync/` | `Workout`, `ActivityFilter`, the on-device `SyncLedger`, and `SyncEngine`, which decides what to upload and does it. |
-| `Kimbia/` | `KimbiaActivityMapper`: the only code that knows Kimbia's lexicon. |
+| `Kimbia/` | `KimbiaActivityMapper`, the only code that knows Kimbia's `app.kimbia.activity` lexicon; `KimbiaPrivacy`; and `Polyline`, which encodes, crops and simplifies routes. |
 
 ### Deciding what syncs
 
@@ -47,6 +47,23 @@ rate-limited, the PDS down), which stop the sync so it is retried next
 time. Progress is saved after every record, so a sync that iOS cuts short
 resumes where it stopped. Calls are serialised, so a background wake-up
 never races a sync started from the UI.
+
+### Mapping to Kimbia
+
+Every HealthKit type maps to one of Kimbia's `sportType`s: running → `run`,
+cycling → `ride`, swimming → `swim`, walking → `walk`, hiking → `hike`, and
+anything else → `other`. Decimals are strings and durations whole seconds,
+as the lexicon requires. `source` is `apple-health`.
+
+The lexicon describes how Kimbia protects what it publishes, and the app
+does the same, controlled by `KimbiaPrivacy`:
+
+- `startedAt` is the local day at noon UTC unless exact times are shared,
+  in which case it is the true start with its local offset, and
+  `elapsedTime` is added.
+- `polyline` is omitted, cropped (500 m trimmed from each end) or full.
+  Long routes are simplified (Ramer–Douglas–Peucker) to fit the lexicon's
+  20 000 characters, and `altitude` has one value per kept point.
 
 ## The app (`KimbiaSync/`)
 

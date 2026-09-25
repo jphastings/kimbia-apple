@@ -25,9 +25,10 @@ enum AppEnvironment {
     /// The scheme part of `oauthRedirectURI`, as `ASWebAuthenticationSession` wants it.
     static let oauthCallbackScheme = "me.byjp.kimbia-sync"
 
-    /// What the app asks permission for: `atproto`, plus write access to
-    /// Kimbia's activity collection and nothing else.
-    static let oauthScope = "atproto repo:\(KimbiaActivityMapper().collection)"
+    /// What the app asks permission for: `atproto`, plus access to Kimbia's
+    /// activity collection and nothing else. Must match
+    /// `web/oauth-client-metadata.json`.
+    static let oauthScope = "atproto repo:\(KimbiaActivityMapper.collection)"
 
     static let oauthConfiguration = OAuthClientConfiguration(
         clientID: oauthClientID,

@@ -86,7 +86,7 @@ struct ImportView: View {
     private var explanation: String {
         switch mode {
         case .setup:
-            return String(localized: "Choose which past workouts to add to Kimbia. Ticked ones match the activities you chose to sync. From now on, new workouts sync automatically.")
+            return String(localized: "Choose which past workouts to add to Kimbia. Ticked ones match the activities you chose to sync. From now on, new workouts sync automatically.\n\nSynced activities are public. By default they show only the day and a map that leaves out your start and finish; change this in Settings.")
         case .edit:
             return String(localized: "Workouts from before you set up Kimbia Sync, and ones you removed, that aren't in Kimbia.")
         }

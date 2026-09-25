@@ -36,8 +36,13 @@ public struct Workout: Identifiable, Codable, Hashable, Sendable {
     public let elevationAscended: Double?
     /// `true` for a treadmill run or an indoor ride, when Health says so.
     public let isIndoor: Bool?
-    /// The app or device that recorded the workout, e.g. "Apple Watch".
+    /// The app that recorded the workout, e.g. "Workout".
     public let sourceName: String?
+    /// The device that recorded the workout, e.g. "Apple Watch".
+    public let deviceName: String?
+    /// Where the workout happened, as an IANA identifier ("Europe/London"),
+    /// when Health knows.
+    public let timeZoneIdentifier: String?
 
     public init(
         id: UUID,
@@ -51,7 +56,9 @@ public struct Workout: Identifiable, Codable, Hashable, Sendable {
         maximumHeartRate: Double? = nil,
         elevationAscended: Double? = nil,
         isIndoor: Bool? = nil,
-        sourceName: String? = nil
+        sourceName: String? = nil,
+        deviceName: String? = nil,
+        timeZoneIdentifier: String? = nil
     ) {
         self.id = id
         self.activityType = activityType
@@ -65,7 +72,29 @@ public struct Workout: Identifiable, Codable, Hashable, Sendable {
         self.elevationAscended = elevationAscended
         self.isIndoor = isIndoor
         self.sourceName = sourceName
+        self.deviceName = deviceName
+        self.timeZoneIdentifier = timeZoneIdentifier
     }
+}
+
+/// One point on a workout's route.
+public struct RoutePoint: Codable, Hashable, Sendable {
+    public let latitude: Double
+    public let longitude: Double
+    /// Metres above sea level, when recorded.
+    public let altitude: Double?
+
+    public init(latitude: Double, longitude: Double, altitude: Double? = nil) {
+        self.latitude = latitude
+        self.longitude = longitude
+        self.altitude = altitude
+    }
+}
+
+/// Where routes come from. The app's implementation reads Apple Health.
+public protocol RouteSource: Sendable {
+    /// The route recorded with `workout`, in order, or `nil` if it has none.
+    func route(for workout: Workout) async throws -> [RoutePoint]?
 }
 
 /// Where workouts come from. The app's implementation reads Apple Health.

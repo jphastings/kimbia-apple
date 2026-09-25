@@ -12,6 +12,7 @@ final class Preferences: @unchecked Sendable {
 
     private enum Key {
         static let filter = "activityFilter"
+        static let privacy = "kimbiaPrivacy"
         static let lastSync = "lastSuccessfulSync"
         static let lastError = "lastSyncError"
     }
@@ -28,6 +29,20 @@ final class Preferences: @unchecked Sendable {
         }
         set {
             defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.filter)
+        }
+    }
+
+    /// What's made public about each activity. Applies to activities synced
+    /// from then on.
+    var privacy: KimbiaPrivacy {
+        get {
+            guard let data = defaults.data(forKey: Key.privacy),
+                  let privacy = try? JSONDecoder().decode(KimbiaPrivacy.self, from: data)
+            else { return KimbiaPrivacy() }
+            return privacy
+        }
+        set {
+            defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.privacy)
         }
     }
 

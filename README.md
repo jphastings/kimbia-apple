@@ -12,10 +12,6 @@ There is no middle-man server.
 
 This is an independent, unofficial app, not made by Kimbia.
 
-> **Status:** the sign-in, Health, filtering, import and background-sync
-> machinery is in place. Writing records is switched off until the mapping
-> to Kimbia's lexicon (`KimbiaActivityMapper`) is written.
-
 ## How it works
 
 - You sign in once with [ATProto OAuth](https://atproto.com/specs/oauth).
@@ -38,6 +34,11 @@ This is an independent, unofficial app, not made by Kimbia.
   says so and offers to delete the ones already synced. Any synced activity
   can be removed from your PDS from Settings, and won't be re-synced unless
   you import it again.
+- **Privacy.** Activities are written as
+  [`app.kimbia.activity`](https://kimbia.app) records, which are public, so
+  the app follows Kimbia's own defaults: only the day is shared (as noon
+  UTC) and route maps leave out the first and last 500 m. Exact times and
+  full or hidden maps are options in Settings.
 - Each workout's record key is derived from the workout itself, so syncing
   one twice (after a reinstall, say) overwrites it rather than adding a
   duplicate.

@@ -8,6 +8,7 @@ struct SettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var isConfirmingSignOut = false
+    @State private var privacy = AppEnvironment.preferences.privacy
 
     var body: some View {
         NavigationStack {
@@ -39,6 +40,22 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle("Exact Start Times", isOn: $privacy.shareExactTimes)
+                    Picker("Route Map", selection: $privacy.route) {
+                        Text("Hidden").tag(KimbiaPrivacy.Route.hidden)
+                        Text("Cropped").tag(KimbiaPrivacy.Route.cropped)
+                        Text("Full").tag(KimbiaPrivacy.Route.full)
+                    }
+                } header: {
+                    Text("What's Public")
+                } footer: {
+                    Text(privacyExplanation)
+                }
+                .onChange(of: privacy) { _, newValue in
+                    AppEnvironment.preferences.privacy = newValue
+                }
+
+                Section {
                     LabeledContent("Signed in as", value: session.handle.map { "@\($0)" } ?? session.did)
                     LabeledContent("Data server", value: session.pdsURL.host() ?? session.pdsURL.absoluteString)
                     Button("Sign Out", role: .destructive) {
@@ -65,6 +82,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .onAppear { privacy = AppEnvironment.preferences.privacy }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -79,5 +97,18 @@ struct SettingsView: View {
                 Text("New workouts will stop syncing. Activities already in Kimbia stay there.")
             }
         }
+    }
+
+    private var privacyExplanation: String {
+        let time = privacy.shareExactTimes
+            ? String(localized: "Activities show when they started and how long they took, stops included.")
+            : String(localized: "Activities show only the day they happened.")
+        let route: String
+        switch privacy.route {
+        case .hidden: route = String(localized: "No map is shared.")
+        case .cropped: route = String(localized: "Maps leave out the first and last 500 m, so they don't show where you start or finish.")
+        case .full: route = String(localized: "Maps show the whole route, including where you start and finish.")
+        }
+        return time + " " + route + " " + String(localized: "Activities in your data server are public. Changes apply to activities synced from now on.")
     }
 }
