@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy · Kimbia Sync</title>
+  <meta name="description" content="What Kimbia Sync reads, stores, and which services it contacts.">
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+    :root {
+      --bg: #FFF4EE;
+      --ink: #1C1917;
+      --muted: #6B625B;
+      --accent: #C2410C;
+      --rule: rgba(28, 25, 23, 0.14);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1C1917;
+        --ink: #FAFAF9;
+        --muted: #A8A29E;
+        --accent: #F0703A;
+        --rule: rgba(250, 250, 249, 0.16);
+      }
+    }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      padding: 8vh 24px 48px;
+      color: var(--ink);
+      background: var(--bg);
+      font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 34rem; margin: 0 auto; }
+    h1 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 4px; }
+    h2 { font-size: 18px; letter-spacing: -0.01em; margin: 2rem 0 0.5rem; }
+    p { margin: 0 0 1rem; }
+    ul { padding-left: 1.2rem; margin: 0 0 1rem; }
+    li { margin-bottom: 0.5rem; }
+    code { font-size: 0.92em; overflow-wrap: anywhere; }
+    a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    .meta { color: var(--muted); font-size: 15px; margin-bottom: 2rem; }
+    footer {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Privacy notice</h1>
+    <p class="meta">Kimbia Sync · Updated September 2026</p>
+
+    <p>
+      Kimbia Sync is a small, open-source iOS app. It has no server, no
+      analytics and no accounts. The developer collects no data about you.
+    </p>
+
+    <h2>What the app reads</h2>
+    <p>
+      With your permission, the app reads your workouts from Apple Health:
+      the kind of activity, when it started and ended, and the distance,
+      energy, heart rate, elevation and route recorded with it. It never
+      writes to Apple Health.
+    </p>
+
+    <h2>On your device</h2>
+    <p>
+      The app stores your AT Protocol tokens, and the DPoP key that protects
+      them, in the iOS Keychain. They stay on this device: they are not
+      included in backups and do not move to a new phone. The tokens go only
+      to your own PDS and its authorisation server.
+    </p>
+    <p>
+      The app also keeps a list of the workouts it has synced, and your
+      choice of activity types, in its private storage. Deleting the app
+      deletes these.
+    </p>
+    <p>
+      Signing out asks your authorisation server to revoke the tokens, then
+      deletes them from the device. iOS keeps Keychain items after an app is
+      removed, where no other app can read them; if you install the app
+      again, it deletes them the first time it opens.
+    </p>
+
+    <h2>Who the app contacts</h2>
+    <p>The app connects to these services and to no others.</p>
+    <ul>
+      <li>
+        <strong>Your PDS and its authorisation server</strong>, to sign in,
+        to keep your sign-in fresh, and to write and delete your activity
+        records. Your account decides which servers these are.
+      </li>
+      <li>
+        <strong><code>plc.directory</code></strong> and
+        <strong><code>public.api.bsky.app</code></strong>, only when you sign
+        in, to turn your handle into the address of your PDS. (An account with
+        a <code>did:web</code> identity is looked up on the site that identity
+        names instead.) If that fails, the app asks the website your handle is
+        named after. These look-ups are public and use no credentials.
+      </li>
+    </ul>
+
+    <h2>What you publish</h2>
+    <p>
+      The workouts you choose to sync are written as records in your AT
+      Protocol repository, where Kimbia reads them. Records in an AT Protocol
+      repository are public. The app only asks for permission to write
+      Kimbia's activity records.
+    </p>
+
+    <h2>What the app does not collect</h2>
+    <ul>
+      <li>No analytics, no crash reports and no telemetry.</li>
+      <li>No advertising identifiers.</li>
+      <li>The app sends nothing to the developer.</li>
+    </ul>
+
+    <h2>Questions</h2>
+    <p>
+      Read the
+      <a href="https://github.com/jphastings/kimbia-apple">source code</a>
+      to check all of the above. Open an issue if something is unclear.
+    </p>
+
+    <footer>
+      <a href="./">Kimbia Sync</a> · Not made by Kimbia.
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "client_id": "https://kimbia-sync.byjp.me/oauth-client-metadata.json",
+  "client_name": "Kimbia Sync",
+  "client_uri": "https://kimbia-sync.byjp.me/",
+  "logo_uri": "https://kimbia-sync.byjp.me/icon.png",
+  "policy_uri": "https://kimbia-sync.byjp.me/privacy.html",
+  "redirect_uris": ["me.byjp.kimbia-sync:/oauth/callback"],
+  "scope": "atproto repo:app.kimbia.activity",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "application_type": "native",
+  "token_endpoint_auth_method": "none",
+  "dpop_bound_access_tokens": true
+}

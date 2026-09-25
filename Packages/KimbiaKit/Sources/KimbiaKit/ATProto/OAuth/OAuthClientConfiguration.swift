@@ -1,0 +1,39 @@
+import Foundation
+import OAuthenticator
+
+/// How this app identifies itself to authorization servers.
+///
+/// ATProto has no client registration step: the `client_id` *is* a URL to a
+/// public JSON document describing the client (its redirect URIs, scopes,
+/// that it is a public native app using DPoP). Servers fetch it on demand.
+public struct OAuthClientConfiguration: Equatable, Sendable {
+    /// URL of the client metadata document, e.g.
+    /// `https://kimbia-sync.byjp.me/oauth-client-metadata.json`.
+    public var clientID: URL
+    /// Where the browser sends the user back to, e.g.
+    /// `me.byjp.kimbia-sync:/oauth/callback`. Must be listed in the metadata
+    /// document.
+    public var redirectURI: URL
+    /// Space-separated OAuth scopes. Must include `atproto`.
+    public var scope: String
+
+    public init(clientID: URL, redirectURI: URL, scope: String) {
+        self.clientID = clientID
+        self.redirectURI = redirectURI
+        self.scope = scope
+    }
+
+    /// The same information in the shape OAuthenticator wants. A public
+    /// client has no secret, so `clientPassword` is empty.
+    public var appCredentials: AppCredentials {
+        AppCredentials(
+            clientId: clientID.absoluteString,
+            clientPassword: "",
+            scopes: scope.split(separator: " ").map(String.init),
+            callbackURL: redirectURI
+        )
+    }
+
+    /// The custom URL scheme the callback arrives on.
+    public var callbackScheme: String? { redirectURI.scheme }
+}

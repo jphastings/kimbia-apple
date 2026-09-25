@@ -1,0 +1,97 @@
+# fastlane lanes for Kimbia Sync.
+#
+#   bundle exec fastlane ios test   - run KimbiaKit's unit tests
+#   bundle exec fastlane ios beta   - build a signed archive and upload to TestFlight
+#
+# `beta` expects the signing certificate and provisioning profile to be
+# installed already (release.yml does this) and the environment variables
+# listed in docs/RELEASING.md to be set. Actions run with the repository root
+# as the working directory; `sh` runs inside fastlane/, hence the `..` below.
+
+default_platform(:ios)
+
+PROJECT = "KimbiaSync.xcodeproj"
+SCHEME = "KimbiaSync"
+APP_BUNDLE_ID = "me.byjp.KimbiaSync"
+
+platform :ios do
+  desc "Run the KimbiaKit unit tests (the same command CI uses)"
+  lane :test do
+    sh("swift", "test", "--package-path", "../Packages/KimbiaKit", "--parallel", "--only-use-versions-from-resolved-file")
+  end
+
+  desc "Build a signed App Store archive and upload it to TestFlight"
+  lane :beta do
+    team_id = ENV.fetch("APPLE_TEAM_ID") { UI.user_error!("APPLE_TEAM_ID is not set") }
+    app_profile = ENV.fetch("APP_PROFILE_NAME") { UI.user_error!("APP_PROFILE_NAME is not set") }
+
+    # The build number must increase with every upload. GitHub's run number
+    # does exactly that; locally, fall back to a timestamp.
+    build_number = ENV.fetch("GITHUB_RUN_NUMBER") { Time.now.utc.strftime("%Y%m%d%H%M") }
+
+    # The version people see. A tag build takes it from the tag, so `v0.2.0`
+    # ships as 0.2.0; anything else keeps the MARKETING_VERSION in project.yml.
+    ref = ENV["GITHUB_REF_NAME"].to_s
+    marketing_version = ref.match?(/\Av\d+(\.\d+)*\z/) ? ref.delete_prefix("v") : nil
+
+    UI.message("Build number: #{build_number}")
+    UI.message(marketing_version ? "Version: #{marketing_version} (from tag #{ref})"
+                                 : "Version: from project.yml (no version tag)")
+
+    # The .xcodeproj is not committed; regenerate it from project.yml.
+    sh("cd .. && xcodegen generate")
+
+    # Manual signing, written into the generated project.
+    update_code_signing_settings(
+      path: PROJECT,
+      targets: ["KimbiaSync"],
+      use_automatic_signing: false,
+      team_id: team_id,
+      code_sign_identity: "Apple Distribution",
+      bundle_identifier: APP_BUNDLE_ID,
+      profile_name: app_profile
+    )
+
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      xcargs: [
+        "CURRENT_PROJECT_VERSION=#{build_number}",
+        marketing_version ? "MARKETING_VERSION=#{marketing_version}" : nil,
+      ].compact.join(" "),
+      export_options: {
+        signingStyle: "manual",
+        teamID: team_id,
+        signingCertificate: "Apple Distribution",
+        provisioningProfiles: {
+          APP_BUNDLE_ID => app_profile,
+        },
+        uploadSymbols: true,
+      },
+      output_directory: "fastlane/builds",
+      output_name: "KimbiaSync.ipa",
+      include_symbols: true
+    )
+
+    # Authenticate to App Store Connect with an API key rather than an Apple
+    # ID, so no 2FA prompt can ever block CI.
+    app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_BASE64"),
+      is_key_content_base64: true,
+      in_house: false
+    )
+
+    upload_to_testflight(
+      app_identifier: APP_BUNDLE_ID,
+      # Processing takes several minutes; the build appears in TestFlight
+      # on its own, so do not hold the runner for it.
+      skip_waiting_for_build_processing: true
+    )
+
+    UI.success("Uploaded build #{build_number} to TestFlight")
+  end
+end

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]   # tag pushes are handled by release.yml
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package-tests:
+    name: KimbiaKit tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+
+      - name: Cache SwiftPM build directory
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: Packages/KimbiaKit/.build
+          key: ${{ runner.os }}-kimbiakit-${{ hashFiles('Packages/KimbiaKit/Package.swift', 'Packages/KimbiaKit/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-kimbiakit-
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Run tests
+        run: swift test --package-path Packages/KimbiaKit --parallel --only-use-versions-from-resolved-file
+
+  app-build:
+    name: Build app (iOS Simulator)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen and xcbeautify
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project KimbiaSync.xcodeproj \
+            -scheme KimbiaSync \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            | xcbeautify

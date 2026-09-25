@@ -1,0 +1,104 @@
+# XcodeGen spec for Kimbia Sync. Regenerate the project with `xcodegen generate`;
+# the .xcodeproj is not committed. Info.plist and entitlements are generated
+# from the `info:` and `entitlements:` blocks below so nothing binary or
+# hand-edited lives in the repo.
+name: KimbiaSync
+
+options:
+  bundleIdPrefix: me.byjp
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+
+packages:
+  KimbiaKit:
+    path: Packages/KimbiaKit
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    # Strict concurrency stays on inside KimbiaKit (see its Package.swift); the
+    # app uses `minimal` so SwiftUI/UIKit/HealthKit bridging doesn't drown
+    # real warnings.
+    SWIFT_STRICT_CONCURRENCY: minimal
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+    # Team is injected by CI (xcconfig / xcodebuild flags). Automatic signing
+    # with an empty team still allows `CODE_SIGNING_ALLOWED=NO` simulator builds.
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    TARGETED_DEVICE_FAMILY: "1"
+
+targets:
+  KimbiaSync:
+    type: application
+    platform: iOS
+    sources:
+      - KimbiaSync
+    dependencies:
+      - package: KimbiaKit
+      - sdk: HealthKit.framework
+    entitlements:
+      path: KimbiaSync/KimbiaSync.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        # Lets HealthKit wake the app when a workout is saved.
+        com.apple.developer.healthkit.background-delivery: true
+    info:
+      path: KimbiaSync/Info.plist
+      properties:
+        CFBundleDisplayName: Kimbia Sync
+        # XcodeGen's generated Info.plist otherwise hard-codes "1.0" and "1",
+        # which silently ignores MARKETING_VERSION and CURRENT_PROJECT_VERSION
+        # and makes every upload collide on build 1.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSHealthShareUsageDescription: Kimbia Sync reads your workouts, with their distance, energy, heart rate and route, to add them to your Kimbia training journal.
+        # `fetch` is what background app refresh needs; HealthKit background
+        # delivery needs only its entitlement.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - me.byjp.KimbiaSync.refresh
+        # The OAuth redirect URI is `me.byjp.kimbia-sync:/oauth/callback`.
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLName: me.byjp.KimbiaSync.oauth
+            CFBundleURLSchemes:
+              - me.byjp.kimbia-sync
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.byjp.KimbiaSync
+        PRODUCT_NAME: KimbiaSync
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+schemes:
+  KimbiaSync:
+    build:
+      targets:
+        KimbiaSync: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - package: KimbiaKit/KimbiaKitTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: false
